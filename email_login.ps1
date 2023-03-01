@@ -10,7 +10,7 @@ function Show-Menu {
     )
     Clear-Host
     Write-Host "================ $Title ================"
-    if (Test-Path -Path "C:\Scripts\send_email.ps1") #Checks to see if the script has already been installed and displays to User
+    if (Test-Path -Path "C:\Secure23\send_email.ps1") #Checks to see if the script has already been installed and displays to User
     {
     Write-Host "Agent is Installed" -ForegroundColor green 
     Write-Host "1: Press '1' to install agent."
@@ -54,13 +54,26 @@ $SMTPClient.EnableSsl = $true
 
 $SMTPClient.Credentials = New-Object System.Net.NetworkCredential("'+ $ADMIN_EMAIL + '", "'+ $PASSWORD + '"); 
 $SMTPClient.Send($EmailFrom, $EmailTo, $Subject, $Body)' 
-
-$CODE | Out-File "C:\Scripts\send_email.ps1"  #Create file in C:/Scripts folder. Folder needs to be generated first to work. Working on this
+New-Item -Path "c:\" -Name "Secure23" -ItemType "directory"
+$CODE | Out-File "C:\Secure23\send_email.ps1"  #Create file in C:/Scripts folder. Folder needs to be generated first to work. Working on this
 
 Clear-Host
 
+#Create new schedulued Task
+
+$Sta = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "C:\Secure23\send_email.ps1"
+$Stt = New-ScheduledTaskTrigger -AtLogon
+$Set = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries
+Register-ScheduledTask LogAgent -Action $Sta -Trigger $Stt -Settings $Set
+
+$taskObject = Get-ScheduledTask "LogAgent"
+$taskObject.Author = "Lachlan"
+$taskObject | Set-ScheduledTask
+
 
 ######## 
+
+
 
 # To Code:
 # Create Task Scheduler task using PS. Attaching to event ID 4624
@@ -75,7 +88,7 @@ $result = Read-Host "Would you like to send a test email?
 
 switch ($result) {
     'Y' { 'Sending Test Email...' 
-    Start-Job -FilePath "C:\Scripts\send_email.ps1" | Wait-Job #Runs the email send script
+    Start-Job -FilePath "C:\Secure23\send_email.ps1" | Wait-Job #Runs the email send script
     }
     'N' { 'No Email Sent..' }
     Default{
