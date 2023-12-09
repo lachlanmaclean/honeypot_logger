@@ -1,7 +1,6 @@
-﻿#Honeypot Machine Notification v0.02
-#Lachlan Maclean 2023
+﻿#Honeypot Notification v0.03
+#Updated 10 December 2023
 #First step in creating the email send script through menu based installation
-#Context of a technician installing this application
 
 
 function Show-Menu {
@@ -14,8 +13,8 @@ function Show-Menu {
     {
     Write-Host "Agent is Installed" -ForegroundColor green 
     Write-Host "1: Press '1' to install agent."
-    Write-Host "2: Press '2' to edit customer details."
-    Write-Host "3: Press '3' to edit vendor details"
+   #Write-Host "2: Press '2' to edit customer details."
+   #Write-Host "3: Press '3' to edit vendor details"
     Write-Host "Q: Press 'Q' to quit."
     } 
     else 
@@ -31,26 +30,26 @@ function Show-Menu {
 function Install-Agent {
 
 $HOSTNAME = $env:computername
-$Encrypted = "01000000d08c9ddf0115d1118c7a00c04fc297eb010000001aa1c202190c2f4ead49a78c48567d7d0000000002000000000010660000000100002000000033ab6d4a972552fbb7f29fe5515c360819af9bc4d803a0e4831100d3aeb502bb000000000e8000000002000020000000abcb51dac59c18892b9ae1528db3c647adbf5b55c604c5864dd7e99be7ab11bf30000000a640763ab2987685f50dc45a8fb96b7a12d9781df8bac180f2a778003bbdf4b594fe582935bde1c32dfcbee533f9df59400000003856255477e0c02c02f4fb4e3fdafb07e6c9b843d718a8573de201fc88523441277874358ad96708137ce7f06e915031205b8d3411a9b415815d25fa8e4ff579
-" | Out-File "C:\Secure23\encryted.txt"
 
-
-Write-Host $cred
 
 $CUSTOMER_NAME = Read-Host -Prompt 'Enter the customer''s name'
 $CUSTOMER_EMAIL =Read-Host -Prompt 'Input the customer''s email address'
+$SENDING_ADDRESS = Read-Host -Prompt 'Enter the sending email address'
+$SENDING_PASS = Read-Host -Prompt 'Please enter your App password'
+
+
 #$ADMIN_EMAIL =Read-Host -Prompt 'Enter the Vendor email'
 #$PASSWORD =Read-Host -Prompt 'Enter the Vendor email generated app-password'
 
 #Generate .ps1 based on the input provided
 $CODE= '
-$EmailFrom = "lachlantestemail@gmail.com"
+$EmailFrom = "'+ $SENDING_ADDRESS + '"
 
 $EmailTo = "'+ $CUSTOMER_EMAIL + '"
 
 $Subject = "Alert for Customer: '+ $CUSTOMER_NAME + '"
 
-$Body = "'+ $HOSTNAME + ' has been compromised"
+$Body = "'+ $HOSTNAME + ' has been accessed!"
 
 $SMTPServer = "smtp.gmail.com"
 
@@ -59,15 +58,15 @@ $SMTPClient = New-Object Net.Mail.SmtpClient($SmtpServer, 587)
 $SMTPClient.EnableSsl = $true
 
 
-$password = Get-Content "c:\Secure23\encrypted.txt" | ConvertTo-SecureString 
-$SMTPClient.Credentials = New-Object System.Management.Automation.PsCredential($EmailFrom,$password)
+$password = "'+ $SENDING_PASS + '"
+$SMTPClient.Credentials = New-Object System.Net.NetworkCredential($EmailFrom,$password)
 
 
 
 
 $SMTPClient.Send($EmailFrom, $EmailTo, $Subject, $Body)' 
 New-Item -Path "c:\" -Name "Secure23" -ItemType "directory"
-$CODE | Out-File "C:\Secure23\send_email.ps1"  #Create file in C:/Scripts folder. Folder needs to be generated first to work. Working on this
+$CODE | Out-File "C:\Secure23\send_email.ps1"  
 
 
 
@@ -84,7 +83,7 @@ Register-ScheduledTask LogAgent -Action $Sta -Trigger $Stt -Settings $Set
 $taskObject = Get-ScheduledTask "LogAgent"
 $taskObject.Author = "Lachlan"
 $taskObject | Set-ScheduledTask
-#Clear-Host
+Clear-Host
 
 
 ######## 
